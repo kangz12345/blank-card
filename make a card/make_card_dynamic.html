@@ -1,0 +1,293 @@
+<!doctype html>
+<html>
+<head>
+	<title>Make a Card</title>
+	<meta charset="utf-8" />
+	<style>
+		#sl_font{
+			font-family: Arial;
+			font-size: 20px;
+			text-align: center;
+		}
+		#bt_bold{
+			font-family: Arial;
+			font-size: 20px;
+			font-weight: bold;
+			color:gray;
+			text-align: center;
+		}
+		#bt_italic{
+			font-family: Arial;
+			font-size: 20px;
+			font-style: italic;
+			color:gray;
+			text-align:center;
+		}
+		#bt_under{
+			font-family: Arial;
+			font-size: 20px;
+			text-decoration: underline;
+			color:gray;
+			text-align:center;
+		}
+		#bt_blank{
+			font-family: Arial;
+			font-size: 20px;
+			text-align: center;
+			color: black;
+		}
+		#text_editor{
+			font-family: Arial;
+			font-size:35px;
+			text-align: center;
+			background-color: lightgray;
+		}
+		#label{
+			font-family: Arial;
+			font-size:26px;
+			text-align: center;
+			color: lightgray;
+		}
+		#sl_label{
+			font-family: Arial;
+			font-size:22px;
+			text-align: center;	
+			color: lightgray;
+		}
+		#bt_make{
+			font-family: Arial;
+			font-size: 25px;
+			text-align: center;
+			color: black;
+			font-weight: bold;
+		}
+	</style>
+</head>
+
+<body align="center">
+	<div style=background-color:orange><h2 style=color:white>Make a Card</h2></div>
+	<div><form name="edit_form">
+		<span >
+			<select name="fonts" id="sl_font" onchange="changeFont()" accesskey='t'>
+				<option value="arial" style="font-family=arial">Arial</option>
+				<option value="monospace" style="font-family=monospace">Monospace</option>
+				<option value="serif" style="font-family=serif">Serif</option>
+				<option value="sans-serif" style="font-family=sans-serif">Snas-Serif</option>
+				<option value="cursive" style="font-family=cursive">Cursive</option>
+				<option value="fantasy" style="font-family=fantasy">Fantasy</option>
+				<option value="dotum" style="font-family=dotum">돋움</option>
+				<option value="batang" style="font-family=batang">바탕</option>
+			</select>
+		</span>
+		<span> 
+			<input type="button" name="button_bold" id="bt_bold" value="B" onclick="toBold()" accesskey='b'>
+		</span>
+		<span> <!Italic Button>
+			<input type="button" name="button_italic" id="bt_italic" value="I" onclick="toItalic()"  accesskey='i'>
+		</span>
+		<span> <!UnderLine Button>
+			<input type="button" name="button_under" id="bt_under" value="U" onclick="toUnder()" accesskey='u'>
+		</span>
+		<span leftmargin="20"> <!Blank Add Button>
+			<input type="button" name="button_blank" id="bt_blank" value="[ ]" onclick="addBlank()" accesskey='l'>
+		</span>
+	</div>
+	<div> <!Text Editor>
+		<textarea name="editor" id="text_editor" style="wdith:300px; height:500px" onkeyup="keyUpped()" style=resize:none></textarea>
+	</div>
+	<div>
+		<image src="face.png"> <!Maker Image>
+		<label id="label"></label> <!Maker's name label>
+	</div>
+	<div>
+		<image src="label.png"> <!Category Image>
+		<select name="labels" id="sl_label" onchange="changeType()">
+			<option value="fun">Fun</option>
+			<option value="love">Love</option>
+			<option value="happy">Happy</option>
+			<option value="sad">Sad</option>
+		</select>
+	</div>
+	<div>
+		<input type="button" name="button_make" id="bt_make" value="Make!" onclick="makeCard()" accesskey='m'>
+	</div>
+</form>
+
+	<script type="text/javascript">
+		var ta=document.getElementById("text_editor"); //Text Editor
+		var lb=document.getElementById("label"); //Label showing maker
+		var cg=document.getElementById("sl_label"); //category chooser
+		ta.focus();
+		var text="", bk="[    ]";
+		var maker="YoungJin"; //maker of this card
+		//Button Controls
+		function toBold(){
+			if(ta.style.fontWeight=="bold"){
+				ta.style.fontWeight="normal";
+				document.getElementById("bt_bold").style.color="gray";
+			}
+			else {
+				ta.style.fontWeight="bold";
+				document.getElementById("bt_bold").style.color="black";
+			}
+			ta.focus();
+		}
+		function toItalic(){
+			if(ta.style.fontStyle=="italic"){
+				ta.style.fontStyle="normal";
+				document.getElementById("bt_italic").style.color="gray";
+			}
+			else {
+				ta.style.fontStyle="italic";
+				document.getElementById("bt_italic").style.color="black";
+			}
+			ta.focus();
+		}
+		function toUnder(){
+			if(ta.style.textDecoration=="underline"){
+				ta.style.textDecoration="none";
+				document.getElementById("bt_under").style.color="gray";
+			}
+			else {
+				ta.style.textDecoration="underline";
+				document.getElementById("bt_under").style.color="black";
+			}
+			ta.focus();
+		}
+		function setMaker(name){ //set Maker of this card(showing on label)
+			maker=name;
+			lb.innerHTML=maker;
+		}
+		function getMaker(){return maker;} //getMaker of this card
+		function getCategory(){return cg.options[cg.selectedIndex];} //get Category
+		function makeCard(){ //make card data to send
+
+		}
+		//Get Cursor Index
+		function getInputSelection(el) {
+		    var start = 0, end = 0, normalizedValue, range,
+		        textInputRange, len, endRange;
+
+		    if (typeof el.selectionStart == "number" && typeof el.selectionEnd == "number") {
+		        start = el.selectionStart;
+		        end = el.selectionEnd;
+		    } else {
+		        range = document.selection.createRange();
+
+		        if (range && range.parentElement() == el) {
+		            len = el.value.length;
+		            normalizedValue = el.value.replace(/\r\n/g, "\n");
+
+		            // Create a working TextRange that lives only in the input
+		            textInputRange = el.createTextRange();
+		            textInputRange.moveToBookmark(range.getBookmark());
+
+		            // Check if the start and end of the selection are at the very end
+		            // of the input, since moveStart/moveEnd doesn't return what we want
+		            // in those cases
+		            endRange = el.createTextRange();
+		            endRange.collapse(false);
+
+		            if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1) {
+		                start = end = len;
+		            } else {
+		                start = -textInputRange.moveStart("character", -len);
+		                start += normalizedValue.slice(0, start).split("\n").length - 1;
+
+		                if (textInputRange.compareEndPoints("EndToEnd", endRange) > -1) {
+		                    end = len;
+		                } else {
+		                    end = -textInputRange.moveEnd("character", -len);
+		                    end += normalizedValue.slice(0, end).split("\n").length - 1;
+		                }
+		            }
+		        }
+		    }
+
+		    return {
+		        sta: start,
+		        end: end
+		    };
+		}
+		function setCaretPosition(elem, caretPos) { //setting cursor pos
+
+		    if(elem != null) {
+		        if(elem.createTextRange) {
+		            var range = elem.createTextRange();
+		            range.move('character', caretPos);
+		            range.select();
+		        }
+		        else {
+		            if(elem.selectionStart) {
+		                elem.focus();
+		                elem.setSelectionRange(caretPos, caretPos);
+		            }
+		            else
+		                elem.focus();
+		        }
+		    }
+		}
+		String.prototype.insert = function (index, string) {
+		  if (index > 0)
+		    return this.substring(0, index) + string + this.substring(index, this.length);
+		  else
+		    return string + this;
+		};
+		String.prototype.replaceAt=function(index, character) {
+		    return this.substr(0, index) + character + this.substr(index+character.length);
+		}
+		function addBlank(){
+			text=ta.value;
+			s=getInputSelection(ta).sta, e=getInputSelection(ta).end;
+			text=text.insert(e,bk);
+			ta.value=text;
+			setCaretPosition(ta,e+6);
+		}
+		function changeFont(){
+			ta.style.fontFamily=document.getElementById("sl_font").options[document.getElementById("sl_font").selectedIndex].value;
+			ta.focus();
+		}
+		function keyUpped(){ //event handler when key upped
+			text=ta.value;
+			var s=getInputSelection(ta).sta;
+			var txl=text.length;
+			for(i=0;i<txl;i++){
+				if(text.charAt(i)==']'){
+					var t1=text.slice(0,i);
+					var t2=text.slice(i+1,txl);
+					text=t1+t2;
+					ta.value=text;
+					txl=text.length;
+				}
+				if(text.charAt(i)=='['){
+					sl=0;
+					while(true){
+						i++;
+						if(i>=txl){
+							text=text.slice(0,txl-sl-1);
+							ta.value=text;
+							break;
+						}
+						if(text.charAt(i)==']'){
+							var t1=text.slice(0,i-sl-1);
+							var t2=text.slice(i+1,txl);
+							text=t1+bk+t2;
+							ta.value=text;
+							txl=text.length;
+							i+=(4-sl);
+							break;
+						}
+						else {
+							sl++;
+							continue;
+						}
+					}
+				}
+			}
+			
+		}
+
+	</script>
+
+</body>
+</html>

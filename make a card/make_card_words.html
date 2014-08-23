@@ -1,0 +1,507 @@
+<!doctype html>
+<html>
+<head>
+	<title>Make a Card</title>
+	<meta charset="utf-8" />
+	<style>
+		#sl_font{
+			font-family: Arial;
+			font-size: 20px;
+			text-align: center;
+		}
+		#bt_bold{
+			font-family: Arial;
+			font-size: 20px;
+			font-weight: bold;
+			color:gray;
+			text-align: center;
+		}
+		#bt_italic{
+			font-family: Arial;
+			font-size: 20px;
+			font-style: italic;
+			color:gray;
+			text-align:center;
+		}
+		#bt_under{
+			font-family: Arial;
+			font-size: 20px;
+			text-decoration: underline;
+			color:gray;
+			text-align:center;
+		}
+		#bt_blank{
+			font-family: Arial;
+			font-size: 20px;
+			text-align: center;
+			color: black;
+		}
+		#bt_help{
+			font-family: Arial;
+			font-size: 20px;
+			text-align: center;
+			color: blue;
+		}
+		#text_area{
+
+		}
+		#test_edit{
+		}
+		#form_edit{
+			visibility: hidden;
+		}
+		#space_edit{
+		}
+		#text_ok{
+
+		}
+		#text_cvs{
+			background-color: #f2f2f2;
+		}
+	</style>
+</head>
+
+<body>
+	<h2>Make a Card</h2>
+	<!Editor Tools Form>
+	<form name="editor">
+		<span >
+			<select name="fonts" id="sl_font" onchange="changeFont()" accesskey='t'>
+				<option value="arial" style="font-family=arial">Arial</option>
+				<option value="monospace" style="font-family=monospace">Monospace</option>
+				<option value="serif" style="font-family=serif">Serif</option>
+				<option value="sans-serif" style="font-family=sans-serif">Snas-Serif</option>
+				<option value="cursive" style="font-family=cursive">Cursive</option>
+				<option value="fantasy" style="font-family=fantasy">Fantasy</option>
+				<option value="dotum" style="font-family=dotum">돋움</option>
+				<option value="batang" style="font-family=batang">바탕</option>
+			</select>
+		</span>
+		<span>
+			<input type="button" name="button_bold" id="bt_bold" value="B" onclick="toBold()" accesskey='b'>
+		</span>
+		<span>
+			<input type="button" name="button_italic" id="bt_italic" value="I" onclick="toItalic()"  accesskey='i'>
+		</span>
+		<span>
+			<input type="button" name="button_under" id="bt_under" value="U" onclick="toUnder()" accesskey='u'>
+		</span>
+		<span leftmargin="20">
+			<input type="button" name="button_blank" id="bt_blank" value="[ ]" onclick="addBlank()" accesskey='l'>
+		</span>
+		<span leftmargin="20">
+			<input type="button" id="bt_blank" value="Space" onclick="addWord(SPACE,false,false,under);ta.focus();">
+		</span>
+		<span leftmargin="20">
+			<input type="button" id="bt_blank" value="Enter" onclick="addWord(ENTER,false,false,false);ta.focus();">
+		</span>
+		<span>
+			<input type="button" id="bt_help" value="?" onclick="showHelp()">
+		</span>
+		<span>
+			<input type="button" id="bt_help" value="Q?" onclick="showQ()">
+		</span>
+	</form>
+
+	<form name="text_add" onSubmit="addClicked();return false;">
+		Word Add Here : <input type="text" id="text_area" onkeydown="keyDowned1()"> <input type="button" id="text_ok" value="Add" onclick="addClicked()" alt=
+		"text"> <input type="checkbox" id="add_space" checked="true" onclick="ta.focus()" accesskey='a'> Auto-add Space
+	</form>
+	<form name="text_edit" onSubmit="editClicked();return false;" id="form_edit">
+		Word Edit Here : <input type="text" id="text_edit" onkeydown="keyDowned2()">&nbsp<input type="button" id="edit_ok" value="Edit" onclick="editClicked()">
+	</form>
+	<form name="space_edit" id="space_edit">
+		<span style="display:inline-block;width:400px">
+			<input type="button" id="bt_space" value="Remove" onclick="removeWord();updateCanvas();"> <input type="button" id="bt_space" value="Remove All" onclick="len_word=1;target_word=0;words[0]=new Array('',20,20,bold,italic,under);updateCanvas();ta.focus();">
+		</span>
+		<span style="display:inline-block;width:196px" align="right">
+			<input type="button" id="bt_save" value="Save" accesskey='s' onclick="saveCard()">
+		</span>
+	</form>
+	<canvas name="text_canvas" id="text_cvs" width="600" height="800" ondblclick="canvasClicked(0)" onclick="canvasClicked(1)"></canvas>
+	<script type="text/javascript">
+		const BLANK=-1, ENTER=-2, SPACE=-3, NONE=-10, BLANK_SHAPE="[    ]";
+		var bold=false, italic=false, under=false;
+		var blocked=false;
+
+		var cvs = document.getElementById("text_cvs"); //Canvas
+		var ta = document.getElementById("text_area"); //Text Area
+		var te = document.getElementById("text_edit"); //EditTextArea
+		var fe = document.getElementById("form_edit"); //Edit Form
+		var se = document.getElementById("space_edit"); //Space Form
+		var ctx = cvs.getContext('2d'); //Context
+		ctx.strokeStyle='#101010';
+
+		var now_font="Arial", font_size=40, line_gap=20; // Varialbes about Font
+		//Functions about Font
+		function changeFont(){
+			now_font=document.getElementById("sl_font").options[document.getElementById("sl_font").selectedIndex].value;
+			document.getElementById("sl_font").style.fontFamily=now_font;
+			updateCanvas();
+			ta.focus();
+		}
+		function setFont(b,i){ //Apllying Font
+			t_str="";
+			if(b)t_str+="bold ";
+			if(i)t_str+="italic ";
+			t_str+=font_size+"px "+now_font;
+			ctx.font=t_str;
+		}
+		function toBold(){
+			if(bold){
+				bold=false;
+				document.getElementById("bt_bold").style.color='grey';
+			}
+			else{
+				bold=true;
+				document.getElementById("bt_bold").style.color='black';
+			}
+			if(blocked)words[target_word][3]=bold;
+			updateCanvas();
+			ta.focus();
+		}
+		function toItalic(){
+			if(italic){
+				italic=false;
+				document.getElementById("bt_italic").style.color='grey';
+			}
+			else{
+				italic=true;
+				document.getElementById("bt_italic").style.color='black';
+			}
+			if(blocked)words[target_word][4]=italic;
+			updateCanvas();
+			ta.focus();
+		}
+		function toUnder(){
+			if(under){
+				under=false;
+				document.getElementById("bt_under").style.color='grey';
+			}
+			else{
+				under=true;
+				document.getElementById("bt_under").style.color='black';
+			}
+			if(blocked)words[target_word][5]=under;
+			updateCanvas();
+			ta.focus();
+		}
+		function addBlank(){
+			addWord(BLANK,bold,italic,under);
+			if(document.getElementById("add_space").checked)addWord(SPACE,false,false,false);
+			updateCanvas();
+			ta.focus();
+		}
+
+		var backed_index=0, backed_pixel=0; //Varialbes about Cursor Control
+
+		var words=new Array(); //Saving Words[word,x pos, y pos, bold, italic, underline]
+		words[0]=new Array("",20,20,false,false,false);
+		var target_word=0, len_word=1, edit_word=""; //Variables about Words
+
+		//Functions about Words
+		function addWord(w,b,it,u){ //append Word to Array
+			for(i=len_word-1;i>target_word;i--){
+				words[i+1]=words[i];
+			}
+			len_word++;
+			target_word++;
+			backed_index=0;
+			backed_pixel=0;
+			words[target_word]=new Array(w,0,0,b,it,u);
+			updateCanvas();
+		}
+		function changeWord(w,b,i,u){ //change now 
+			words[target_word][0]=w;
+			words[target_word][3]=b;
+			words[target_word][4]=i;
+			words[target_word][5]=u;
+			updateCanvas();
+		}
+		function removeWord(){
+			if(len_word>1 && target_word>0){
+				len_word--;
+				for(i=target_word--;i<len_word;i++)words[i]=words[i+1];
+			}
+			else if(len_word==1 && target_word==0){
+				words = new Array();
+				words[0]=new Array("",0,0,bold,italic,under);
+			}
+			te.value="";
+			ta.focus();
+		}
+		function eraseWord(a){
+			len_word--;
+			if(target_word>a)target_word--;
+			for(i=a;i<len_word;i++)words[i]=words[i+1];
+		}
+		function arrayWord(){
+			var now_x=20,now_y=20+font_size;
+			for(i=0;i<len_word;i++){
+				if(words[i][0]==SPACE){ //if SPACE
+					words[i][1]=now_x;
+					words[i][2]=now_y;
+					setFont(words[i][3],words[i][4]);
+					now_x+=ctx.measureText(" ").width;
+					continue;
+				}
+				if(words[i][0]==ENTER){ //if ENTER
+					now_x=20;
+					now_y+=font_size+line_gap;
+					words[i][1]=now_x;
+					words[i][2]=now_y;
+					continue;
+				}
+				if(words[i][0]==BLANK){ //if BLANK
+					setFont(words[i][3],words[i][4]);
+					words[i][1]=now_x;
+					words[i][2]=now_y;
+					words[i][1]=now_x;
+					now_x+=ctx.measureText(BLANK_SHAPE).width;
+					if(now_x+20>cvs.width){ //over width, line change
+						now_x=20;
+						now_y+=font_size+line_gap;
+						words[i][1]=now_x;
+						words[i][2]=now_y;
+						now_x+=ctx.measureText(BLANK_SHAPE).width;
+					}
+					continue;
+				}
+				//if just Word
+				setFont(words[i][3],words[i][4]);
+				words[i][1]=now_x;
+				words[i][2]=now_y;
+				now_x+=ctx.measureText(words[i][0]).width;
+				if(now_x+20>cvs.width){
+					now_x=20;
+					now_y+=font_size+line_gap;
+					words[i][1]=now_x;
+					words[i][2]=now_y;
+					now_x+=ctx.measureText(words[i][0]).width;
+				}
+			}
+		}
+
+		//Functions about Edit Text
+		function drawText(w,x,y,b,i,u){ //draw Text on Canvas
+			setFont(b,i);
+			ctx.fillText(w,x,y);
+			if(u){ //underline
+				ctx.beginPath();
+				ctx.moveTo(x,y+5);
+				ctx.lineTo(x+ctx.measureText(w).width,y+5);
+				ctx.stroke();
+			}
+		}
+		function updateCanvas(){
+			arrayWord();
+			ctx.fillStyle='#f2f2f2';
+			ctx.fillRect(0,0,cvs.width,cvs.height);
+			if(blocked){
+				ctx.fillStyle="#d0d0ff";				
+				setFont(words[target_word][3],words[target_word][4])
+				if(words[target_word][0]==SPACE){
+					ctx.fillRect(words[target_word][1],words[target_word][2]-font_size,ctx.measureText(" ").width,font_size);
+					fe.style.visibility="hidden";
+				}
+				else if(words[target_word][0]==BLANK){
+					ctx.fillRect(words[target_word][1],words[target_word][2]-font_size,ctx.measureText(BLANK_SHAPE).width,font_size);
+					fe.style.visibility="hidden";
+				}
+				else{
+					ctx.fillRect(words[target_word][1],words[target_word][2]-font_size,ctx.measureText(words[target_word][0]).width,font_size);
+					fe.style.visibility="visible";
+				}
+				bold=words[target_word][3];
+				italic=words[target_word][4];
+				under=words[target_word][5];
+				if(bold){
+					document.getElementById("bt_bold").style.color='black';
+				}
+				else{
+					document.getElementById("bt_bold").style.color='grey';
+				}
+				if(italic){
+					document.getElementById("bt_italic").style.color='black';
+				}
+				else{
+					document.getElementById("bt_italic").style.color='grey';
+				}
+				if(under){
+					document.getElementById("bt_under").style.color='black';
+				}
+				else{
+					document.getElementById("bt_under").style.color='grey';
+				}
+			}
+			ctx.fillStyle='black';
+			for(i=0;i<len_word;i++){
+				ttd=words[i][0];
+				if(ttd==ENTER)continue;
+				if(ttd==SPACE)ttd=" ";
+				else if(ttd==BLANK)ttd=BLANK_SHAPE;
+				drawText(ttd,words[i][1],words[i][2],words[i][3],words[i][4],words[i][5]);
+			}
+			//draw Cursor
+			setFont(words[target_word][3],words[target_word][4]);
+			var nw=words[target_word][0];
+			if(nw==SPACE)nw=" ";
+			else if(nw==ENTER)nw="";
+			else if(nw==BLANK)nw=BLANK_SHAPE;
+			var cx=words[target_word][1]+ctx.measureText(nw.slice(0,nw.length-backed_index)).width;
+			var cy=words[target_word][2];
+			ctx.beginPath();
+			ctx.moveTo(cx,cy-font_size);
+			ctx.lineTo(cx,cy);
+			ctx.stroke();
+		}
+		function addClicked(){
+			if(ta.value.length==0){
+				addWord(ENTER,false,false,false);
+			}
+			else{
+				addWord(ta.value,bold,italic,under);
+				if(document.getElementById("add_space").checked){
+					addWord(SPACE,false,false,false);
+				}
+			}
+			
+			ta.value="";
+			updateCanvas();
+			ta.focus();
+		}
+		function editClicked(){
+			if(te.value.length==0){
+				removeWord();
+			}
+			else{
+				changeWord(te.value,bold,italic,under);
+			}
+			te.value="";
+			blocked=false;
+			updateCanvas();
+			fe.style.visibility='hidden';
+			ta.focus();
+		}
+		function findContainer(mx,my){
+			for(i=0;i<len_word;i++){
+				if(words[i][0]==ENTER)continue;
+				if(words[i][0]==SPACE){
+					setFont(words[i][3],words[i][4]);
+					if(0<mx-words[i][1] && mx-words[i][1]<ctx.measureText(" ").width){
+						if(0<words[i][2]-my && words[i][2]-my<font_size){
+							return i;
+						}
+					}
+					continue;
+				}
+				if(words[i][0]==BLANK){
+					setFont(words[i][3],words[i][4]);
+					if(0<mx-words[i][1] && mx-words[i][1]<ctx.measureText(BLANK_SHAPE).width){
+						if(0<words[i][2]-my && words[i][2]-my<font_size){
+							return i;
+						}
+					}
+					continue;
+				}
+				setFont(words[i][3],words[i][4]);
+				if(0<mx-words[i][1] && mx-words[i][1]<ctx.measureText(words[i][0]).width){
+					if(0<words[i][2]-my && words[i][2]-my<font_size){
+						return i;
+					}
+				}
+			}
+			blocked=false;
+			return NONE;
+		}
+		function canvasClicked(a){
+			var mx=event.x, my=event.y;
+			mx-=cvs.offsetLeft;
+			my-=cvs.offsetTop;
+			var ind=findContainer(mx,my);
+			if(ind==NONE){
+				fe.style.visibility = "hidden";
+				target_word=len_word-1;
+				updateCanvas();
+				ta.focus();
+				return;
+			}
+			target_word=ind;
+			blocked=true;
+			switch(words[ind][0]){
+				case SPACE:
+					fe.style.visibility = "hidden";
+					ta.focus();
+					break;
+				case BLANK:
+					fe.style.visibility = "hidden";
+					ta.focus();
+					break;
+				default:
+					fe.style.visibility = "visible";
+					te.focus();
+					te.value=words[ind][0];
+			}
+			if(a==0)removeWord();
+			updateCanvas();
+		}
+		function keyDowned1(){
+			var check=event.keyCode;
+			if(check==8 && ta.value.length==0)removeWord();
+			if(check==46 && target_word<len_word-1 && ta.value.length==0){
+				target_word++;
+				removeWord();
+			}
+			updateCanvas();
+			ta.focus();
+		}
+		function keyDowned2(){
+			if(event.keyCode==8 && te.value.length==0)removeWord();
+			updateCanvas();
+			te.focus();
+		}
+		function saveCard(){
+			fo=new ActiveXObject("Scripting.FileSystemObject");
+			var name="C:\\Users\\Administrator\\Desktop\\"+prompt("Create the Name of this Card!");
+			name+=".txt";
+			var fw=fo.CreateTextFile(name,true,true);
+			fw.write("<"+now_font+">");
+			for(i=0;i<len_word;i++){
+				t=words[i];
+				var a=0,b=0,c=0;
+				if(t[3])a=1;
+				if(t[4])b=1;
+				if(t[5])c=1;
+				if(t[0]=="")continue;
+				if(t[0]==ENTER){
+					fw.write("<"+ENTER+">");
+					continue;
+				}
+				if(t[0]==SPACE){
+					fw.write("<1> "+","+a+","+b+","+c);
+					continue;
+				}
+				if(t[0]==BLANK){
+					fw.write("<"+BLANK+">"+a+","+b+","+c);
+					continue;
+				}
+				fw.write("<"+t[0].length+">"+t[0]+","+a+","+b+","+c);
+			}
+			fw.close();
+			alert("Save Complete at your Desktop.");
+			ta.focus();
+		}
+		function showHelp(){
+			alert("드롭다운 박스로 전체 폰트를 설정할 수 있고\nB,I,U 버튼을 통해 굵게, 기울임, 밑줄을 설정할 수 있습니다.\n[ ] 버튼은 빈칸을 추가하는 버튼이며 \n아래의 텍스트 입력칸에서 단어를 추가하고 편집할 수 있습니다.\n아무것도 입력하지 않고 엔터를 치게 되면 줄바꿈이 적용됩니다.\n\n마우스로 캔버스의 단어들을 클릭하면 입력한 단어 단위로 선택이 되며 편집/삭제/추가 등의 작업을 할 수 있습니다.");
+			ta.focus();
+		}
+		function showQ(){
+			alert("Alt + B : Bold Button [굵게]\nAlt + I : Italic Button [기울임]\nAlt + U : Underline Button [밑줄]\nAlt + L : Add Blank Button [빈칸 추가]\nAlt + T : Change Font Dropdown box [글꼴 변경]\nAlt + A : Toggle Auto-add Space [자동 공백추가 설정/해제]\nAlt + S : Save Button [저장]");
+			ta.focus();
+		}
+		updateCanvas();
+		ta.focus();
+
+	</script>
+</body>
+</html>
